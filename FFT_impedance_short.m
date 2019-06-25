@@ -12,19 +12,19 @@ clearvars -except Trace_*
 yes_save = 1;
 graphtextoffset = 0;
 
-TITLE = '190619 slice1 (1) AOB GC - 80mV exp .2-20Hz';
+TITLE = '160304 slice2 (2) MOB PV1 exp -60mV 20s 5-90Hz ZAP';
 
 % which experiment
-Experimentnum =     1    ;
+Experimentnum =     2    ;
 Experiment = ['Trace_' num2str(Experimentnum) '_'];
 % load wh:ich traces?
-Trace = [  9:13    ];
+Trace = [  36 37  ];
 
 % frequency cutoffs in ZAP
-lowercutoff= .01; % .4
-uppercutoff= 12; % 15
-% lowercutoff= .2; % .4
-% uppercutoff= 60; % 15
+% lowercutoff= .01; % .4
+% uppercutoff= 20; % 15
+lowercutoff= 5; % .4
+uppercutoff= 90; % 15
 
 % % ZAP stimulus time in seconds and when it started in the trace
 % ZAPtime =15;
@@ -35,15 +35,15 @@ uppercutoff= 12; % 15
 ZAPstart = 5; % time during trace when ZAP protocol started;
 ZAPtime = 20; % length of ZAP protocol;    10
 currstepON = 1; % did current injection 12s into trace
-currsteptime = 0.5; % current injection lasted for 1s
+currsteptime = 1; % current injection lasted for 1s
 
 % ZAPstart = 5; % time during trace when ZAP protocol started;
 % ZAPtime = 30; % length of ZAP protocol;    10
 % currstepON = 1; % did current injection 12s into trace
 % currsteptime = 1; % current injection lasted for 1s
 
-target = .4 ;% Hz
-% target = 2; % Hz
+% target = .4 ;% Hz
+target = 8; % Hz
 % target = lowercutoff;
 % window size for filtering
 dofilter = 1;
@@ -55,9 +55,9 @@ resampF = 1;
 
 % channel = 1 for voltage trace;   channel = 2 for current trace
 % make list of voltage traces
-% for i = 1:length(Trace)
-%     reord_tracelist_voltage{i} = [Experiment, num2str(Trace(i)), '_', '1', '_', num2str(1)];
-% end
+for i = 1:length(Trace)
+    reord_tracelist_voltage{i} = [Experiment, num2str(Trace(i)), '_', '1', '_', num2str(1)];
+end
 % make list of current traces
 for i = 1:length(Trace)
     reord_tracelist_current{i} = [Experiment, num2str(Trace(i)), '_', '1', '_', num2str(2)];
@@ -69,11 +69,10 @@ Fs = floor(length(tmptmp(:,1))/tmptmp(end,1))
 
 
 %% Average traces and THEN perform FFT
-% if average_THEN_FFT == 1;
 for i = 1:length(reord_tracelist_current)
-%     voltage = eval(reord_tracelist_voltage{i});
+    voltage = eval(reord_tracelist_voltage{i});
     current = eval(reord_tracelist_current{i});
-%     toavg_volt(:,i) = voltage(:,2);
+    toavg_volt(:,i) = voltage(:,2);
     toavg_curr(:,i) = current(:,2);
 end
 
@@ -88,13 +87,13 @@ end
             trace = eval(reord_tracelist{j});
             data_T = trace(:,1);
             
-%%             % filter
+%             % filter
             maxT = round(trace(end,1));
             Fs = length(trace(:,1))/maxT;
-%             [bLP,aLP] = butter(2, 300/(Fs/2), 'low'); %300Hz LP filter 2nd order
-%             trace(:,2) = (filtfilt(bLP,aLP, double(trace(:,2))));
+            [bLP,aLP] = butter(2, 300/(Fs/2), 'low'); %300Hz LP filter 2nd order
+            trace(:,2) = (filtfilt(bLP,aLP, double(trace(:,2))));
 
-%             data_V(:,i) = trace(:,2);
+            data_V(:,i) = trace(:,2);
             
             toavg_volt(:, ( ((i-1) * prevlen) +j)) = trace(:,2);
 
@@ -116,40 +115,108 @@ toFFT_volt = avg_volt(((ZAPstart*Fs)+1):((ZAPstart+ZAPtime)*Fs));
 
 toFFT_curr = avg_curr(((ZAPstart*Fs)+1):((ZAPstart+ZAPtime)*Fs));
 
-% FFT to get impedance
-numsamps=ZAPtime*Fs;
-NFFT=2^nextpow2(numsamps);
-freqs=(Fs/2)*linspace(0,1,NFFT/2+1);
+%% 
+%% FFT to get impedance
+% 
+% numsamps=ZAPtime*Fs;
+% NFFT=2^nextpow2(numsamps);
+% freqs=(Fs/2)*linspace(0,1,NFFT/2+1);
+% 
+% [temp, highcutoff]=find(freqs>uppercutoff,1);
+% [temp, lowcutoff]=find(freqs>lowercutoff,1);
+% freqsnew=freqs(lowcutoff:highcutoff);
+% specsize=length(freqsnew);
+% 
+% %     ffV=fft(toFFT_volt, NFFT)/numsamps;
+% %     ffI=fft(toFFT_curr, NFFT)/numsamps;
+% ffV=fft(toFFT_volt)/numsamps;
+% ffI=fft(toFFT_curr)/numsamps;
+% %     currenth=hann(length(toFFT_curr));
+% %     voltageh=hann(length(toFFT_volt));
+% 
+% % currenth=nuttallwin(length(toFFT_curr));
+% % voltageh=nuttallwin(length(toFFT_volt));
+% 
+% %     ffV=fft(toFFT_volt.*voltageh, NFFT)/numsamps;
+% %     ffI=fft(toFFT_curr.*currenth, NFFT)/numsamps;
+% 
+% ffV2=ffV(lowcutoff:highcutoff);
+% ffI2=ffI(lowcutoff:highcutoff);
+% 
+% 
+% figure
+% plot(freqsnew, ffV2)
+% figure
+% plot(freqsnew, ffI2)
+% 
+% z1=ffV2./ffI2;
+% %     zmag=abs(z1)/ 10^6;
+% zmag = sqrt(imag(z1).^2 + real(z1).^2)/ 10^6;
+% 
+% phaseangle=atan(imag(z1)./real(z1));
+% 
+% % filtering/smoothing the numbers
+% if dofilter == 1;
+%     % Design the filter
+%     %         [bLP,aLP] = butter(6,100/(Fs/2), 'low'); %300Hz LP filter 2nd order
+%     %         impedance = (filtfilt(bLP,aLP,zmag)); %Low pass @300Hz
+%     %         phase = (filtfilt(bLP,aLP,phaseangle)); %Low pass @300Hz
+%     impedance = filter(ones(1,windowSize)/windowSize,1,zmag);
+%     phase = filter(ones(1,windowSize)/windowSize,1,phaseangle);
+%     
+%     
+%     %         impedance = filter(ones(1,windowSize)/windowSize,1,impedance);
+%     %         phase = filter(ones(1,windowSize)/windowSize,1,phase);
+%     %
+%     %         impedance = filter(ones(1,windowSize)/windowSize,1,impedance);
+%     %         phase = filter(ones(1,windowSize)/windowSize,1,phase);
+%     %         impedance = filter(ones(1,windowSize)/windowSize,1,impedance);
+%     %         phase = filter(ones(1,windowSize)/windowSize,1,phase);
+%     %
+%     impedance = resample(impedance, 1,resampF);
+%     phase = resample(phase, 1,resampF);
+%     freqsnew = resample(freqsnew, 1,resampF);
+%     
+% elseif dofilter == 0;
+%     impedance = zmag;
+%     phase = phaseangle;
+% end
+% % 
+% keyboard
+%%
+%% get FFTs with pmtmPH
+% 
 
-[temp, highcutoff]=find(freqs>uppercutoff,1);
-[temp, lowcutoff]=find(freqs>lowercutoff,1);
-freqsnew=freqs(lowcutoff:highcutoff);
+nw = 0;
+[FFV,s,~] = pmtmPH(toFFT_volt,1/Fs, nw , 0);
+
+[highcutoff]=find(s>uppercutoff,1);
+[lowcutoff]=find(s>lowercutoff,1);
+freqsnew=s(lowcutoff:highcutoff);
 specsize=length(freqsnew);
 
-%     ffV=fft(toFFT_volt, NFFT)/numsamps;
-%     ffI=fft(toFFT_curr, NFFT)/numsamps;
-ffV=fft(toFFT_volt)/numsamps;
-ffI=fft(toFFT_curr)/numsamps;
-%     currenth=hann(length(toFFT_curr));
-%     voltageh=hann(length(toFFT_volt));
+ffV2=sqrt(FFV(lowcutoff:highcutoff));
 
-% currenth=nuttallwin(length(toFFT_curr));
-% voltageh=nuttallwin(length(toFFT_volt));
+[FFI,s,~] = pmtmPH(toFFT_curr,1/Fs, nw , 0);
 
-%     ffV=fft(toFFT_volt.*voltageh, NFFT)/numsamps;
-%     ffI=fft(toFFT_curr.*currenth, NFFT)/numsamps;
+ffI2=sqrt(FFI(lowcutoff:highcutoff));
 
-ffV2=ffV(lowcutoff:highcutoff);
-ffI2=ffI(lowcutoff:highcutoff);
+figure
+plot(freqsnew,ffV2)
+figure
+plot(freqsnew, ffI2)
 
-z1=ffV2./ffI2;
-%     zmag=abs(z1)/ 10^6;
-zmag = sqrt(imag(z1).^2 + real(z1).^2)/ 10^6;
+z1 = ffV2./ffI2;
+    zmag=abs(z1)/ 10^6;
+
+% zmag = sqrt(imag(z1).^2 + real(z1).^2) / 10^6;
+% zmag = sqrt(imag(z1).^2 + real(z1).^2);
+
 
 phaseangle=atan(imag(z1)./real(z1));
 
 % filtering/smoothing the numbers
-if dofilter == 1;
+if dofilter == 1
     % Design the filter
     %         [bLP,aLP] = butter(6,100/(Fs/2), 'low'); %300Hz LP filter 2nd order
     %         impedance = (filtfilt(bLP,aLP,zmag)); %Low pass @300Hz
@@ -174,7 +241,10 @@ elseif dofilter == 0;
     impedance = zmag;
     phase = phaseangle;
 end
+% 
 
+
+%%
 % get resonance freq for cell
 %     newidx_imp = find(freqsnew > 1 & freqsnew < 7);
 %         newidx_imp = find(freqsnew > 1);
@@ -230,8 +300,6 @@ inputR = abs((deltaV/deltaC))/10^9; % input resistance in giga Ohms
 
 %% make a plot
 
-IMPOTENCE = figure;
-
 % subplot(3,1,1); plot(xtime, avg_volt_mV, 'Color', 'k', 'LineWidth', 1.5)
 subplot(2,1,1); plot(xtime, avg_volt_mV, 'Color', 'k', 'LineWidth', 1.5)
 ylabel('Membrane Potential (mV)',  'FontName', 'Arial', 'FontSize', 11, 'FontWeight', 'bold');
@@ -257,12 +325,12 @@ text((freqsnew(floor(length(freqsnew)*.8))), (maximped_val+graphtextoffset), ['Q
 % ylabel('Phase angle (radians)', 'FontName', 'Arial', 'FontSize', 11, 'FontWeight', 'bold');
 % xlabel('Frequency (Hz)',  'FontName', 'Arial', 'FontSize', 11, 'FontWeight', 'bold');
 % xlim([lowercutoff uppercutoff])
+IMPOTENCE = gca;
 
 
 % IMPOTENCE = figure(1);
 if yes_save == 1
     saveas(IMPOTENCE, [TITLE '.jpg'], 'jpg');
-    save([TITLE, '.mat'], 'impedance', 'target', 'phase','freqsnew','inputR', 'maximped_freq', 'maximped_val', 'toavg_volt', 'reord_tracelist_current','lowfreqimp_val', 'Qfactor', 'avg_volt', 'avg_volt_mV', 'avg_curr', 'xtime', 'windowSize', 'resampF',  'freqsnew_forplotting', 'impedance_forplotting', 'phase_forplotting');
-
+    save([TITLE, '.mat'], '-regexp',  '^(?!Trace_.*$).')
 %     save([TITLE, '.mat'], 'impedance', 'target', 'phase','freqsnew','inputR', 'maximped_freq', 'maximped_val', 'toavg_volt', 'reord_tracelist_current','lowfreqimp_val', 'Qfactor', 'avg_volt', 'avg_volt_mV', 'avg_curr', 'xtime', 'windowSize', 'resampF', 'to_avg', 'freqsnew_forplotting', 'impedance_forplotting', 'phase_forplotting');
 end
