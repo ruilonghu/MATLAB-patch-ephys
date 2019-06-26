@@ -3,13 +3,13 @@ clearvars -except Trace_*
 
 tic
 %% settings and shit
-savename = '190619 slice1 (1) AOB GC';
+savename = '190409 slice1 (1) MOB dSAC';
 yes_save = 1;
 
 % which experiment
 Experimentnum =         1          ;   % 
 % load which trace?
-Trace =                 5          ;   % 
+Trace =                 8          ;   % 
 channel =               1          ;
 currchannel =           2          ;
 
@@ -63,20 +63,20 @@ for i = 1:length(reord_tracelist_V)
     tmpI = eval(reord_tracelist_I{i});
     baseI = mean(tmpI(1:(Fs*stimstart), 2));
     stimI = mean(tmpI( Fs*stimstart: Fs*stimend, 2));
-    spk.stepI(i) = (stimI - baseI) * 10^12; % converts to pA
+    spk.stepI(i) = (stimI - baseI); % converts to pA
     
     % get cellprop.sag amplitude
-    if spk.stepI(i) < -1
+    if (spk.stepI(i) *10^12)  < -1
         cellprop.Vmin(i) = min(tmpV( (Fs*stimstart): (Fs*stimend), 2));
         cellprop.Vsteady(i) = mean(tmpV( (Fs* (stimend - .25)) : (Fs*stimend), 2));
         
         cellprop.Vbase(i) = mean(tmpV( 1 : Fs*stimstart, 2));
         
         cellprop.sag(i) = cellprop.Vmin(i) - cellprop.Vsteady(i);
-        cellprop.sag(i) = cellprop.sag(i) * 1000; % converts to mV
+        cellprop.sag(i) = cellprop.sag(i); 
         
         % calculates input resistance
-        cellprop.inputR(i) = ( (cellprop.Vsteady(i) - cellprop.Vbase(i) ) / spk.stepI(i)) * 10^3; % IN GIGA OHMS
+        cellprop.inputR(i) = ( (cellprop.Vsteady(i) - cellprop.Vbase(i) ) / spk.stepI(i)); % IN GIGA OHMS
         
         % calculate tau
         xtofit = tmpV( (Fs*stimstart): (Fs*(stimstart+taustop)), 1);
@@ -109,7 +109,7 @@ for i = 1:length(reord_tracelist_V)
                 
             end
             if ~isnan(tau(i))
-                cellprop.Capac(i) = tau(i)/cellprop.inputR(i)  * 10^-6;
+                cellprop.Capac(i) = tau(i)/cellprop.inputR(i);
             end
             close all
         end
