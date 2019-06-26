@@ -97,7 +97,7 @@ for i = 1:length(reord_tracelist_V)
         taufit = fit(xmod,ymod, ft);
         %         tauw(i) = ( taufit.b * (taufit.a/(taufit.a+taufit.c)) ) + ( taufit.d * (taufit.c/(taufit.a+taufit.c)));
         %         tauw(i) = 1/tauw(i);
-        tau(i) = taufit.b;
+        tau(i) = taufit.b/1000;
         
         if plottau == 1
             figure;plot(taufit, xmod,ymod); hold on; title(['tau = ' num2str(tau(i)) ' . cellprop.Vmin = ' num2str(cellprop.Vmin(i)) '  .  cellprop.Vbase = ' num2str(cellprop.Vbase(i))])
@@ -249,7 +249,7 @@ hold on
 % title([savename ' FI curve'], 'FontName', 'Arial', 'FontSize', 18, 'FontWeight', 'bold');
 
 plot(spk.stepI, spk.spkwinrate, '-ok')
-xlabel('Current injection (pA)', 'FontSize', 12, 'FontName', 'Arial','FontWeight', 'bold');
+xlabel('Current injection (A)', 'FontSize', 12, 'FontName', 'Arial','FontWeight', 'bold');
 ylabel('Spike rate (Hz)', 'FontSize', 12, 'FontName', 'Arial','FontWeight', 'bold');
 set(gca, 'FontSize', 12, 'FontName', 'Arial','FontWeight', 'bold');
 text(min(spk.stepI), mean(spk.spkwinrate), ['spk.slope = ' num2str(spk.slope) ' Hz/pA'], 'FontName', 'Arial', 'FontSize', 10, 'FontWeight', 'bold', 'VerticalAlignment','bottom', 'HorizontalAlignment', 'left')
@@ -268,7 +268,7 @@ subplot(5,2,[10]);
 plot(spk.stepI, spk.CVisi, '-ok')
 xlabel('Time (s)');
 ylabel('CV_I_S_I', 'FontSize', 12, 'FontName', 'Arial','FontWeight', 'bold');
-xlabel('Current injection (pA)', 'FontSize', 12, 'FontName', 'Arial','FontWeight', 'bold');
+xlabel('Current injection (A)', 'FontSize', 12, 'FontName', 'Arial','FontWeight', 'bold');
 set(gca, 'FontSize', 12, 'FontName', 'Arial','FontWeight', 'bold');
 
 
