@@ -3,20 +3,20 @@ clearvars -except Trace_*
 
 tic
 %% settings and shit
-savename = '190409 slice1 (1) MOB dSAC';
+savename = '190802 slice2 (2) p-AOB MC2';
 yes_save = 1;
 
 % which experiment
-Experimentnum =         1          ;   % 
+Experimentnum =         2          ;    % 
 % load which trace?
-Trace =                 8          ;   % 
+Trace =                 7          ;    % 
 channel =               1          ;
 currchannel =           2          ;
 
 yOFF = 1;
 
 % Threshold for spikes
-threshold = -.0000;
+threshold = -.0100;
 spk.slopethresh = .01; % .1; 3 for Fs?
 inst_spkr_bin = .1; % 10 ms instantaneous spike rate bins
 
@@ -30,7 +30,7 @@ sagonly = 0;
 
 % plot taus?
 plottau = 1;
-taustop = .25;
+taustop = .50;
 
 %%  set up the list of traces and find Fs
 Experiment = ['Trace_' num2str(Experimentnum) '_'];
@@ -97,7 +97,7 @@ for i = 1:length(reord_tracelist_V)
         taufit = fit(xmod,ymod, ft);
         %         tauw(i) = ( taufit.b * (taufit.a/(taufit.a+taufit.c)) ) + ( taufit.d * (taufit.c/(taufit.a+taufit.c)));
         %         tauw(i) = 1/tauw(i);
-        tau(i) = taufit.b/1000;
+        tau(i) = (1/taufit.b);
         
         if plottau == 1
             figure;plot(taufit, xmod,ymod); hold on; title(['tau = ' num2str(tau(i)) ' . cellprop.Vmin = ' num2str(cellprop.Vmin(i)) '  .  cellprop.Vbase = ' num2str(cellprop.Vbase(i))])
